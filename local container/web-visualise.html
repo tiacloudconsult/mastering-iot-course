@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Telemetry Data Visualization</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <canvas id="telemetryChart"></canvas>
+
+  <script>
+    // Initialize empty arrays to store telemetry data
+    var temperatureData = [];
+    var humidityData = [];
+
+    // Create a Chart.js line chart
+    var ctx = document.getElementById('telemetryChart').getContext('2d');
+    var chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          { label: 'Temperature', data: temperatureData, borderColor: 'red', fill: false },
+          { label: 'Humidity', data: humidityData, borderColor: 'blue', fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        title: {
+          display: true,
+          text: 'Telemetry Data'
+        },
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true,
+              text: 'Time'
+            }
+          },
+          y: {
+            display: true,
+            title: {
+              display: true,
+              text: 'Value'
+            }
+          }
+        }
+      }
+    });
+
+    // Create a WebSocket connection
+    var socket = new WebSocket('ws://localhost:8765');
+
+    // Handle incoming telemetry data
+    socket.onmessage = function(event) {
+      var telemetryData = JSON.parse(event.data);
+      temperatureData.push(telemetryData.temperature);
+      humidityData.push(telemetryData.humidity);
+      chart.data.labels.push('');
+      chart.update();
+    };
+  </script>
+</body>
+</html>
