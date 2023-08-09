@@ -1,0 +1,22 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.gauge-container {
+  display: flex;
+}
+
+.gauge {
+  margin: 20px;
+  text-align: center;
+}
+
+.gauge-label {
+  margin-top: 10px;
+}
