@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Container Info</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f0f0f0; /* Lighter background color */
+            color: #333;
+        }
+
+        .container {
+            padding: 2rem;
+        }
+
+        h1.title, h2.subtitle {
+            color: #e74545;
+            font-weight: lighter;
+        }
+
+        .canvas-container {
+            margin-bottom: 30px;
+            background-color: #ffffff; /* Light background for charts */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+        }
+
+        canvas {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+
+        .notification {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .subtitle {
+            color: #333;
+        }
+
+        @media screen and (max-width: 768px) {
+            .column {
+                width: 100% !important; /* Stack columns on small screens */
+            }
+        }
+
+        @media screen and (max-width: 1024px) {
+            .column.is-half {
+                width: 100% !important; /* Stack columns on medium screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            {% if name %}
+            <div class="notification is-primary has-text-centered">
+                <p class="title is-4">Welcome, <span style="color: #FFDB58;">{{ name }}</span>! Get Ready to Transform Your Ideas with <span style="color: #FFDB58;">Tiaspaces.</span></p>
+            </div>
+
+            <h2 class="subtitle has-text-centered">Your Container Info</h2>
+            <div class="content has-text-centered">
+                <p>IP Address: {{ ip_address }}</p>
+            </div>
+
+            <!-- Start of chart layout -->
+            <div class="columns is-multiline is-centered">
+                <div class="column is-half">
+                    <div class="content canvas-container">
+                        <h3 class="subtitle">CPU Usage</h3>
+                        <canvas id="cpuChart" width="600" height="400"></canvas>
+                    </div>
+                </div>
+                <div class="column is-half">
+                    <div class="content canvas-container">
+                        <h3 class="subtitle">Memory Usage</h3>
+                        <canvas id="memoryChart" width="600" height="400"></canvas>
+                    </div>
+                </div>
+                <div class="column is-half">
+                    <div class="content canvas-container">
+                        <h3 class="subtitle">Network Statistics</h3>
+                        <canvas id="networkChart" width="600" height="400"></canvas>
+                    </div>
+                </div>
+                <div class="column is-half">
+                    <div class="content canvas-container">
+                        <h3 class="subtitle">CPU Usage History</h3>
+                        <canvas id="cpuHistoryChart" width="600" height="400"></canvas>
+                    </div>
+                </div>
+                <div class="column is-half">
+                    <div class="content canvas-container">
+                        <h3 class="subtitle">System Metrics Radar</h3>
+                        <canvas id="radarChart" width="600" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- End of chart layout -->
+
+            {% endif %}
+        </div>
+    </section>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='chart.js') }}"></script>
+  
+    <script>
+        // Function to update the bubble charts
+        function updateBubbleChart(chart, data) {
+            chart.data.datasets[0].data = data;
+            chart.update();
+        }
+
+        // Function to update the bar chart
+        function updateBarChart(chart, data) {
+            chart.data.labels = Object.keys(data);
+            chart.data.datasets[0].data = Object.values(data);
+            chart.update();
+        }
+
+        // Function to update the radar chart
+        function updateRadarChart(chart, data) {
+            chart.data.datasets[0].data = data;
+            chart.update();
+        }
+
+        // Initialize the charts
+        const cpuChartCtx = document.getElementById('cpuChart').getContext('2d');
+        const memoryChartCtx = document.getElementById('memoryChart').getContext('2d');
+        const networkChartCtx = document.getElementById('networkChart').getContext('2d');
+        const cpuHistoryChartCtx = document.getElementById('cpuHistoryChart').getContext('2d');
+        const radarChartCtx = document.getElementById('radarChart').getContext('2d');
+
+        const cpuChart = new Chart(cpuChartCtx, {
+            type: 'bubble',
+            data: { 
+                datasets: [{
+                    label: 'CPU Usage',
+                    data: [],
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }] 
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `CPU Usage: ${context.raw.y}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Percentage (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        const memoryChart = new Chart(memoryChartCtx, {
+            type: 'bubble',
+            data: { 
+                datasets: [{
+                    label: 'Memory Usage',
+                    data: [],
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }] 
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Memory Usage: ${context.raw.y}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Percentage (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        const networkChart = new Chart(networkChartCtx, {
+            type: 'bar',
+            data: { 
+                labels: [], 
+                datasets: [{
+                    label: 'Network Stats',
+                    data: [],
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }] 
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Bytes'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Network Activities'
+                        }
+                    }
+                }
+            }
+        });
+
+        const cpuHistoryChart = new Chart(cpuHistoryChartCtx, {
+            type: 'line',
+            data: { 
+                labels: [], 
+                datasets: [{
+                    label: 'CPU History',
+                    data: [],
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    fill: true,
+                    borderWidth: 2
+                }] 
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Time: ${context.label}, CPU: ${context.raw}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'CPU Usage (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        const radarChart = new Chart(radarChartCtx, {
+            type: 'radar',
+            data: { 
+                labels: ['CPU Usage', 'Memory Usage', 'Bytes Sent', 'Bytes Received'],
+                datasets: [{
+                    label: 'System Metrics',
+                    data: [],
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }] 
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const metric = context.label;
+                                const value = context.raw;
+                                return `${metric}: ${value}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: false
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+
+        // Function to update all charts
+        function updateCharts(data) {
+            if (data.cpu_usage !== undefined) {
+                updateBubbleChart(cpuChart, [{ x: 1, y: data.cpu_usage, r: 10 }]);
+            }
+            if (data.memory_usage !== undefined) {
+                updateBubbleChart(memoryChart, [{ x: 1, y: data.memory_usage, r: 10 }]);
+            }
+            if (data.net_stats) {
+                updateBarChart(networkChart, data.net_stats);
+            }
+            if (data.cpu_usage !== undefined && data.memory_usage !== undefined && data.net_stats) {
+                updateRadarChart(radarChart, [data.cpu_usage, data.memory_usage, data.net_stats.bytes_sent, data.net_stats.bytes_recv]);
+            }
+        }
+
+        // Function to fetch system info
+        function fetchSystemInfo() {
+            fetch('/live_data')
+                .then(response => response.json())
+                .then(data => updateCharts(data));
+        }
+
+        // Function to fetch CPU history
+        function fetchCpuHistory() {
+            fetch('/cpu_history')
+                .then(response => response.json())
+                .then(data => {
+                    cpuHistoryChart.data.labels = Array.from({ length: data.length }, (_, i) => i + 1);
+                    cpuHistoryChart.data.datasets[0].data = data;
+                    cpuHistoryChart.update();
+                });
+        }
+
+        // Fetch data initially and set interval for periodic updates
+        fetchCpuHistory();
+        fetchSystemInfo();
+        setInterval(fetchSystemInfo, 5000); // Fetch data every 5 seconds
+        setInterval(fetchCpuHistory, 5000); // Fetch CPU history every 5 seconds
+    </script>
+</body>
+</html>
